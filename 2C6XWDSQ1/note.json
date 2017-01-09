@@ -3,7 +3,7 @@
     {
       "title": "",
       "text": "%dep\nz.reset()\n\nz.load(\"org.apache.bahir:spark-streaming-twitter_2.11:2.0.1\")\nz.load(\"org.apache.spark:spark-streaming_2.11:2.0.1\")\nz.load(\"edu.stanford.nlp:stanford-corenlp:3.6.0\")\nz.load(\"edu.stanford.nlp:stanford-corenlp::models-english:3.6.0\")\nz.load(\"com.vdurmont:emoji-java:3.1.3\")",
-      "dateUpdated": "Jan 9, 2017 4:26:37 PM",
+      "dateUpdated": "Jan 9, 2017 4:30:37 PM",
       "config": {
         "colWidth": 12.0,
         "editorMode": "ace/mode/scala",
@@ -37,20 +37,16 @@
       },
       "jobName": "paragraph_1483991643958_-794830508",
       "id": "20170107-165832_1813791554",
-      "result": {
-        "code": "SUCCESS",
-        "type": "TEXT",
-        "msg": "DepInterpreter(%dep) deprecated. Remove dependencies and repositories through GUI interpreter menu instead.\nDepInterpreter(%dep) deprecated. Load dependency through GUI interpreter menu instead.\nDepInterpreter(%dep) deprecated. Load dependency through GUI interpreter menu instead.\nDepInterpreter(%dep) deprecated. Load dependency through GUI interpreter menu instead.\nDepInterpreter(%dep) deprecated. Load dependency through GUI interpreter menu instead.\nDepInterpreter(%dep) deprecated. Load dependency through GUI interpreter menu instead.\nres0: org.apache.zeppelin.dep.Dependency \u003d org.apache.zeppelin.dep.Dependency@216e4b1d\n"
-      },
       "dateCreated": "Jan 9, 2017 1:54:03 AM",
-      "dateStarted": "Jan 9, 2017 4:26:37 PM",
-      "dateFinished": "Jan 9, 2017 4:26:44 PM",
+      "dateStarted": "Jan 9, 2017 4:30:37 PM",
+      "dateFinished": "Jan 9, 2017 4:32:39 PM",
       "status": "FINISHED",
+      "errorMessage": "",
       "progressUpdateIntervalMs": 500
     },
     {
-      "text": "// Configure Twitter credentials\nval apiKey \u003d z.input(\"Twitter API key\")\nval apiSecret \u003d z.input(\"Twitter API secret\")\nval accessToken \u003d z.input(\"Twitter access token\")\nval accessTokenSecret \u003d z.input(\"Twitter access token secret\")\n\nz.put(\"apiKey\", apiKey)\nz.put(\"apiSecret\", apiSecret)\nz.put(\"accessToken\", accessToken)\nz.put(\"accessTokenSecret\", accessTokenSecret)",
-      "dateUpdated": "Jan 9, 2017 4:25:42 AM",
+      "text": "z.put(\"apiKey\",  z.input(\"Twitter API key\"))\nz.put(\"apiSecret\", z.input(\"Twitter API secret\"))\nz.put(\"accessToken\", z.input(\"Twitter access token\"))\nz.put(\"accessTokenSecret\", z.input(\"Twitter access token secret\"))",
+      "dateUpdated": "Jan 9, 2017 4:55:36 PM",
       "config": {
         "colWidth": 12.0,
         "graph": {
@@ -66,26 +62,60 @@
         "editorMode": "ace/mode/scala"
       },
       "settings": {
-        "params": {},
-        "forms": {}
+        "params": {
+          "Twitter API key": "",
+          "Twitter API secret": "",
+          "Twitter access token": "",
+          "Twitter access token secret": ""
+        },
+        "forms": {
+          "Twitter API key": {
+            "name": "Twitter API key",
+            "displayName": "Twitter API key",
+            "type": "input",
+            "defaultValue": "",
+            "hidden": false
+          },
+          "Twitter API secret": {
+            "name": "Twitter API secret",
+            "displayName": "Twitter API secret",
+            "type": "input",
+            "defaultValue": "",
+            "hidden": false
+          },
+          "Twitter access token": {
+            "name": "Twitter access token",
+            "displayName": "Twitter access token",
+            "type": "input",
+            "defaultValue": "",
+            "hidden": false
+          },
+          "Twitter access token secret": {
+            "name": "Twitter access token secret",
+            "displayName": "Twitter access token secret",
+            "type": "input",
+            "defaultValue": "",
+            "hidden": false
+          }
+        }
       },
       "jobName": "paragraph_1483993518623_-1678181166",
       "id": "20170109-142518_516706033",
       "result": {
-        "code": "ERROR",
+        "code": "SUCCESS",
         "type": "TEXT",
         "msg": ""
       },
       "dateCreated": "Jan 9, 2017 2:25:18 AM",
-      "dateStarted": "Jan 9, 2017 4:25:42 AM",
-      "dateFinished": "Jan 9, 2017 4:26:01 AM",
-      "status": "ERROR",
+      "dateStarted": "Jan 9, 2017 4:55:36 PM",
+      "dateFinished": "Jan 9, 2017 4:55:38 PM",
+      "status": "FINISHED",
       "progressUpdateIntervalMs": 500
     },
     {
       "title": "",
       "text": "import org.apache.spark.streaming._\nimport org.apache.spark.streaming.twitter._\nimport org.apache.spark.storage.StorageLevel\nimport scala.io.Source\nimport java.io._\nimport org.apache.log4j.Logger\nimport org.apache.log4j.Level\nimport sys.process.stringSeqToProcess\nimport com.vdurmont.emoji.EmojiParser\n\nobject TweetUtil {\n    val userRegex \u003d \"\"\"(?\u003c\u003d^|(?\u003c\u003d[^a-zA-Z0-9-_.]))@([A-Za-z]+[A-Za-z0-9]+)\"\"\"\n    val urlRegex \u003d \"\"\"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.\u0026+]|[!*(),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+\"\"\"\n    val spaceRegex \u003d \"\"\"\\s+\"\"\"\n\n    def normalize(s: Option[String]): Option[String] \u003d s match {\n        case Some(s) \u003d\u003e Option(EmojiParser.removeAllEmojis(s.replaceAll(userRegex, \"USER\").replaceAll(urlRegex, \"URL\").replace(\"#\", \"\").replaceAll(spaceRegex, \" \")))\n        case _ \u003d\u003e None\n    }\n}\n\n/** Configures the Oauth Credentials for accessing Twitter */\ndef configureTwitterCredentials(apiKey: String, apiSecret: String, accessToken: String, accessTokenSecret: String) {\n  val configs \u003d collection.immutable.HashMap(\n    \"apiKey\" -\u003e apiKey, \"apiSecret\" -\u003e apiSecret, \"accessToken\" -\u003e accessToken, \"accessTokenSecret\" -\u003e accessTokenSecret)\n  println(\"Configuring Twitter OAuth\")\n  configs.foreach{ case(key, value) \u003d\u003e\n    if (value.trim.isEmpty) {\n      throw new Exception(\"Error setting authentication - value for \" + key + \" not set\")\n    }\n    val fullKey \u003d \"twitter4j.oauth.\" + key.replace(\"api\", \"consumer\")\n    System.setProperty(fullKey, value.trim)\n    println(\"\\tProperty \" + fullKey + \" set as [\" + value.trim + \"]\")\n  }\n  println()\n}\n\nval apiKey \u003d z.get(\"apiKey\").toString\nval apiSecret \u003d z.get(\"apiSecret\").toString\nval accessToken \u003d z.get(\"accessToken\").toString\nval accessTokenSecret \u003d z.get(\"accessTokenSecret\").toString\n\nconfigureTwitterCredentials(apiKey, apiSecret, accessToken, accessTokenSecret)\n\nimport org.apache.spark.streaming.twitter._\nimport org.apache.spark.streaming.{Seconds, StreamingContext}\n\nval ssc \u003d new StreamingContext(sc, Seconds(2))\nval tweets \u003d TwitterUtils.createStream(ssc, None)\nval twt \u003d tweets.window(Seconds(60))\n\nimport sqlContext.implicits._\ncase class Tweet(text:String, lang: String) extends Serializable\ntwt.map(status\u003d\u003e\n  Tweet(TweetUtil.normalize(Option(status.getText())).getOrElse(\"\"), status.getLang())\n).filter(_.lang \u003d\u003d \"en\")\n.foreachRDD(rdd\u003d\u003e\n  rdd.toDF().createOrReplaceTempView(\"tweets\")\n)\n\n//twt.print\n\nssc.start()\n",
-      "dateUpdated": "Jan 9, 2017 2:28:01 AM",
+      "dateUpdated": "Jan 9, 2017 4:35:47 PM",
       "config": {
         "lineNumbers": true,
         "tableHide": false,
@@ -128,16 +158,16 @@
       "jobName": "paragraph_1483991643961_-797523750",
       "id": "20170105-140021_996042276",
       "dateCreated": "Jan 9, 2017 1:54:03 AM",
-      "dateStarted": "Jan 9, 2017 2:23:51 AM",
-      "dateFinished": "Jan 9, 2017 2:23:57 AM",
-      "status": "ERROR",
+      "dateStarted": "Jan 9, 2017 4:35:47 PM",
+      "dateFinished": "Jan 9, 2017 4:35:54 PM",
+      "status": "FINISHED",
       "errorMessage": "",
       "progressUpdateIntervalMs": 500
     },
     {
       "title": "",
       "text": "%sql select * from tweets where text like \u0027%Trump%\u0027 limit 10",
-      "dateUpdated": "Jan 9, 2017 1:54:03 AM",
+      "dateUpdated": "Jan 9, 2017 4:37:05 PM",
       "config": {
         "colWidth": 12.0,
         "editorMode": "ace/mode/sql",
@@ -219,13 +249,15 @@
       "jobName": "paragraph_1483991643962_-796369503",
       "id": "20170105-140136_909917063",
       "dateCreated": "Jan 9, 2017 1:54:03 AM",
-      "status": "READY",
+      "dateStarted": "Jan 9, 2017 4:37:05 PM",
+      "dateFinished": "Jan 9, 2017 4:37:09 PM",
+      "status": "FINISHED",
       "errorMessage": "",
       "progressUpdateIntervalMs": 500
     },
     {
-      "text": "import edu.stanford.nlp.ling.CoreAnnotations\nimport edu.stanford.nlp.neural.rnn.RNNCoreAnnotations\nimport edu.stanford.nlp.pipeline.StanfordCoreNLP\nimport edu.stanford.nlp.sentiment.SentimentCoreAnnotations\n\nimport scala.collection.JavaConverters._\n\nobject SentimentUtil {\n  @transient private var sentimentPipeline: StanfordCoreNLP \u003d _\n\n  private def getOrCreateSentimentPipeline(): StanfordCoreNLP \u003d {\n    if (sentimentPipeline \u003d\u003d null) {\n      val props \u003d new Properties()\n      props.setProperty(\"annotators\", \"tokenize, ssplit, parse, sentiment\")\n      sentimentPipeline \u003d new StanfordCoreNLP(props)\n    }\n    sentimentPipeline\n  }\n  \n  private def calcSentiment(text: String): Int \u003d {\n    val pipeline \u003d getOrCreateSentimentPipeline()\n    val annotation \u003d sentimentPipeline.process(text)\n    val tree \u003d annotation.get(classOf[CoreAnnotations.SentencesAnnotation])\n      .asScala\n      .head\n      .get(classOf[SentimentCoreAnnotations.SentimentAnnotatedTree])\n    RNNCoreAnnotations.getPredictedClass(tree) \n  }  \n  \n  def sentiment(text: String): String \u003d  \n    calcSentiment(text) match {\n        case 0 \u003d\u003e \"Very Negative\"\n        case 1 \u003d\u003e \"Negative\" \n        case 2 \u003d\u003e \"Neutral\" \n        case 3 \u003d\u003e \"Positive\" \n        case 4 \u003d\u003e \"Very Positive\"\n    }\n}\n  \nsqlc.udf.register(\"sentiment\", SentimentUtil.sentiment _)",
-      "dateUpdated": "Jan 9, 2017 2:31:16 AM",
+      "text": "import edu.stanford.nlp.ling.CoreAnnotations\nimport edu.stanford.nlp.neural.rnn.RNNCoreAnnotations\nimport edu.stanford.nlp.pipeline.StanfordCoreNLP\nimport edu.stanford.nlp.sentiment.SentimentCoreAnnotations\nimport java.util.Properties\n\nimport scala.collection.JavaConverters._\n\nobject SentimentUtil {\n  @transient private var sentimentPipeline: StanfordCoreNLP \u003d _\n\n  private def getOrCreateSentimentPipeline(): StanfordCoreNLP \u003d {\n    if (sentimentPipeline \u003d\u003d null) {\n      val props \u003d new Properties()\n      props.setProperty(\"annotators\", \"tokenize, ssplit, parse, sentiment\")\n      sentimentPipeline \u003d new StanfordCoreNLP(props)\n    }\n    sentimentPipeline\n  }\n  \n  private def calcSentiment(text: String): Int \u003d {\n    val pipeline \u003d getOrCreateSentimentPipeline()\n    val annotation \u003d sentimentPipeline.process(text)\n    val tree \u003d annotation.get(classOf[CoreAnnotations.SentencesAnnotation])\n      .asScala\n      .head\n      .get(classOf[SentimentCoreAnnotations.SentimentAnnotatedTree])\n    RNNCoreAnnotations.getPredictedClass(tree) \n  }  \n  \n  def sentiment(text: String): String \u003d  \n    calcSentiment(text) match {\n        case 0 \u003d\u003e \"Very Negative\"\n        case 1 \u003d\u003e \"Negative\" \n        case 2 \u003d\u003e \"Neutral\" \n        case 3 \u003d\u003e \"Positive\" \n        case 4 \u003d\u003e \"Very Positive\"\n    }\n}\n  \nsqlc.udf.register(\"sentiment\", SentimentUtil.sentiment _)",
+      "dateUpdated": "Jan 9, 2017 4:45:58 PM",
       "config": {
         "colWidth": 12.0,
         "editorMode": "ace/mode/scala",
@@ -247,14 +279,16 @@
       "jobName": "paragraph_1483991643962_-796369503",
       "id": "20170109-000025_673142494",
       "dateCreated": "Jan 9, 2017 1:54:03 AM",
-      "status": "READY",
+      "dateStarted": "Jan 9, 2017 4:45:58 PM",
+      "dateFinished": "Jan 9, 2017 4:46:07 PM",
+      "status": "FINISHED",
       "errorMessage": "",
       "progressUpdateIntervalMs": 500
     },
     {
       "title": "",
       "text": "%sql select sentiment(text) as Sentiment, count(1) as Count from tweets where text like \u0027%Trump%\u0027 group by sentiment(text)",
-      "dateUpdated": "Jan 9, 2017 1:54:03 AM",
+      "dateUpdated": "Jan 9, 2017 4:47:18 PM",
       "config": {
         "colWidth": 12.0,
         "editorMode": "ace/mode/sql",
@@ -274,7 +308,7 @@
         ],
         "enabled": true,
         "graph": {
-          "mode": "table",
+          "mode": "pieChart",
           "height": 300.0,
           "optionOpen": false,
           "keys": [
@@ -313,7 +347,9 @@
       "jobName": "paragraph_1483991643962_-796369503",
       "id": "20170105-143717_1545672534",
       "dateCreated": "Jan 9, 2017 1:54:03 AM",
-      "status": "READY",
+      "dateStarted": "Jan 9, 2017 4:46:41 PM",
+      "dateFinished": "Jan 9, 2017 4:46:58 PM",
+      "status": "FINISHED",
       "errorMessage": "",
       "progressUpdateIntervalMs": 500
     },
@@ -348,24 +384,7 @@
   "name": "Twitter Sentiment Example",
   "id": "2C6XWDSQ1",
   "angularObjects": {
-    "2C521F2BU:shared_process": [],
-    "2C5H34A19:shared_process": [],
-    "2C5FZQH8S:shared_process": [],
-    "2C5WSAUMH:shared_process": [],
-    "2C66YUFJE:shared_process": [],
-    "2C7K2Z8HZ:shared_process": [],
-    "2C8216NH7:shared_process": [],
-    "2C5P1CTKP:shared_process": [],
-    "2C8Q4R9BY:shared_process": [],
-    "2C8DHFDTR:shared_process": [],
-    "2C7B878T2:shared_process": [],
-    "2C6DVGVUB:shared_process": [],
-    "2C5MGYU5B:shared_process": [],
-    "2C6YVD6WH:shared_process": [],
-    "2C6K8FFCK:shared_process": [],
-    "2C7HKPZ12:shared_process": [],
-    "2C4ZN5A54:shared_process": [],
-    "2C7GC5MEH:shared_process": []
+    "2C676NC29:shared_process": []
   },
   "config": {
     "looknfeel": "default"
