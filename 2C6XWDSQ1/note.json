@@ -1,0 +1,384 @@
+{
+  "paragraphs": [
+    {
+      "title": "",
+      "text": "%dep\nz.reset()\n\nz.load(\"org.apache.bahir:spark-streaming-twitter_2.11:2.0.1\")\nz.load(\"org.apache.spark:spark-streaming_2.11:2.0.1\")\nz.load(\"edu.stanford.nlp:stanford-corenlp:3.6.0\")\nz.load(\"edu.stanford.nlp:stanford-corenlp::models-english:3.6.0\")\nz.load(\"com.vdurmont:emoji-java:3.1.3\")\n\n",
+      "dateUpdated": "Jan 9, 2017 1:54:03 PM",
+      "config": {
+        "colWidth": 12.0,
+        "editorMode": "ace/mode/scala",
+        "results": [
+          {
+            "graph": {
+              "mode": "table",
+              "height": 300.0,
+              "optionOpen": false,
+              "keys": [],
+              "values": [],
+              "groups": [],
+              "scatter": {}
+            }
+          }
+        ],
+        "enabled": true,
+        "graph": {
+          "mode": "table",
+          "height": 300.0,
+          "optionOpen": false,
+          "keys": [],
+          "values": [],
+          "groups": [],
+          "scatter": {}
+        }
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "jobName": "paragraph_1483991643958_-794830508",
+      "id": "20170107-165832_1813791554",
+      "result": {
+        "code": "SUCCESS",
+        "type": "TEXT",
+        "msg": "DepInterpreter(%dep) deprecated. Remove dependencies and repositories through GUI interpreter menu instead.\nDepInterpreter(%dep) deprecated. Add repository through GUI interpreter menu instead.\nDepInterpreter(%dep) deprecated. Load dependency through GUI interpreter menu instead.\nDepInterpreter(%dep) deprecated. Load dependency through GUI interpreter menu instead.\nDepInterpreter(%dep) deprecated. Load dependency through GUI interpreter menu instead.\nDepInterpreter(%dep) deprecated. Load dependency through GUI interpreter menu instead.\nDepInterpreter(%dep) deprecated. Load dependency through GUI interpreter menu instead.\nDepInterpreter(%dep) deprecated. Load dependency through GUI interpreter menu instead.\nres0: org.apache.zeppelin.dep.Dependency \u003d org.apache.zeppelin.dep.Dependency@29fc73f2\n"
+      },
+      "dateCreated": "Jan 9, 2017 1:54:03 PM",
+      "status": "READY",
+      "errorMessage": "",
+      "progressUpdateIntervalMs": 500
+    },
+    {
+      "title": "",
+      "text": "import org.apache.spark.streaming._\nimport org.apache.spark.streaming.twitter._\nimport org.apache.spark.storage.StorageLevel\nimport scala.io.Source\nimport java.io._\nimport org.apache.log4j.Logger\nimport org.apache.log4j.Level\nimport sys.process.stringSeqToProcess\nimport com.vdurmont.emoji.EmojiParser\n\nobject TweetUtil {\n    val userRegex \u003d \"\"\"(?\u003c\u003d^|(?\u003c\u003d[^a-zA-Z0-9-_.]))@([A-Za-z]+[A-Za-z0-9]+)\"\"\"\n    val urlRegex \u003d \"\"\"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.\u0026+]|[!*(),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+\"\"\"\n    val spaceRegex \u003d \"\"\"\\s+\"\"\"\n\n    def normalize(s: Option[String]): Option[String] \u003d s match {\n        case Some(s) \u003d\u003e Option(EmojiParser.removeAllEmojis(s.replaceAll(userRegex, \"USER\").replaceAll(urlRegex, \"URL\").replace(\"#\", \"\").replaceAll(spaceRegex, \" \")))\n        case _ \u003d\u003e None\n    }\n}\n\n/** Configures the Oauth Credentials for accessing Twitter */\ndef configureTwitterCredentials(apiKey: String, apiSecret: String, accessToken: String, accessTokenSecret: String) {\n  val configs \u003d collection.immutable.HashMap(\n    \"apiKey\" -\u003e apiKey, \"apiSecret\" -\u003e apiSecret, \"accessToken\" -\u003e accessToken, \"accessTokenSecret\" -\u003e accessTokenSecret)\n  println(\"Configuring Twitter OAuth\")\n  configs.foreach{ case(key, value) \u003d\u003e\n    if (value.trim.isEmpty) {\n      throw new Exception(\"Error setting authentication - value for \" + key + \" not set\")\n    }\n    val fullKey \u003d \"twitter4j.oauth.\" + key.replace(\"api\", \"consumer\")\n    System.setProperty(fullKey, value.trim)\n    println(\"\\tProperty \" + fullKey + \" set as [\" + value.trim + \"]\")\n  }\n  println()\n}\n\n// Configure Twitter credentials\nval apiKey \u003d z.input(\"Twitter API key\").toString\nval apiSecret \u003d z.input(\"Twitter API secret\").toString\nval accessToken \u003d z.input(\"Twitter access token\").toString\nval accessTokenSecret \u003d z.input(\"Twitter access token secret\").toString\n\nconfigureTwitterCredentials(apiKey, apiSecret, accessToken, accessTokenSecret)\n\nimport org.apache.spark.streaming.twitter._\nimport org.apache.spark.streaming.{Seconds, StreamingContext}\n\nval ssc \u003d new StreamingContext(sc, Seconds(2))\nval tweets \u003d TwitterUtils.createStream(ssc, None)\nval twt \u003d tweets.window(Seconds(60))\n\nimport sqlContext.implicits._\ncase class Tweet(text:String, lang: String) extends Serializable\ntwt.map(status\u003d\u003e\n  Tweet(TweetUtil.normalize(Option(status.getText())).getOrElse(\"\"), status.getLang())\n).filter(_.lang \u003d\u003d \"en\")\n.foreachRDD(rdd\u003d\u003e\n  rdd.toDF().createOrReplaceTempView(\"tweets\")\n)\n\n//twt.print\n\nssc.start()",
+      "dateUpdated": "Jan 9, 2017 1:54:03 PM",
+      "config": {
+        "lineNumbers": true,
+        "tableHide": false,
+        "colWidth": 12.0,
+        "editorMode": "ace/mode/scala",
+        "editorHide": false,
+        "results": [
+          {
+            "graph": {
+              "mode": "table",
+              "height": 300.0,
+              "optionOpen": false,
+              "keys": [],
+              "values": [],
+              "groups": [],
+              "scatter": {}
+            }
+          }
+        ],
+        "enabled": true,
+        "graph": {
+          "mode": "table",
+          "height": 300.0,
+          "optionOpen": false,
+          "keys": [],
+          "values": [],
+          "groups": [],
+          "scatter": {}
+        }
+      },
+      "settings": {
+        "params": {
+          "Twitter API secret": "",
+          "Twitter access token": "",
+          "Twitter access token secret": "",
+          "Twitter API key": ""
+        },
+        "forms": {
+          "Twitter API secret": {
+            "name": "Twitter API secret",
+            "displayName": "Twitter API secret",
+            "type": "input",
+            "defaultValue": "",
+            "hidden": false
+          },
+          "Twitter access token": {
+            "name": "Twitter access token",
+            "displayName": "Twitter access token",
+            "type": "input",
+            "defaultValue": "",
+            "hidden": false
+          },
+          "Twitter access token secret": {
+            "name": "Twitter access token secret",
+            "displayName": "Twitter access token secret",
+            "type": "input",
+            "defaultValue": "",
+            "hidden": false
+          },
+          "Twitter API key": {
+            "name": "Twitter API key",
+            "displayName": "Twitter API key",
+            "type": "input",
+            "defaultValue": "",
+            "hidden": false
+          }
+        }
+      },
+      "jobName": "paragraph_1483991643961_-797523750",
+      "id": "20170105-140021_996042276",
+      "result": {
+        "code": "ERROR",
+        "type": "TEXT",
+        "msg": "\nimport org.apache.spark.streaming._\n\nimport org.apache.spark.streaming.twitter._\n\nimport org.apache.spark.storage.StorageLevel\n\nimport scala.io.Source\n\nimport java.io._\n\nimport org.apache.log4j.Logger\n\nimport org.apache.log4j.Level\n\nimport sys.process.stringSeqToProcess\nConfiguring Twitter OAuth\n\tProperty twitter4j.oauth.consumerKey set as [Ag9SVvNgdLkyYDLrZA5Y60z7t]\n\tProperty twitter4j.oauth.accessTokenSecret set as [DzYP0QMGVvNk3C6Oh6uGQ7z79BvM5GJykfbYlv2tc3s7s]\n\tProperty twitter4j.oauth.consumerSecret set as [z0ERtb5MpvgRzXx3YZV5kh6hG19QkaTtleugclOv0uqNjA2Jpo]\n\tProperty twitter4j.oauth.accessToken set as [14311424-qu8VWTe4OsWBXpao6xy0RXkPFxSPJkTjuQslStUst]\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\njava.lang.IllegalStateException: Only one StreamingContext may be started in this JVM. Currently running StreamingContext was started atorg.apache.spark.streaming.StreamingContext.start(StreamingContext.scala:569)\n\u003cinit\u003e(\u003cconsole\u003e:74)\n\u003cinit\u003e(\u003cconsole\u003e:99)\n\u003cinit\u003e(\u003cconsole\u003e:101)\n.\u003cinit\u003e(\u003cconsole\u003e:105)\n.\u003cclinit\u003e(\u003cconsole\u003e)\n.$print$lzycompute(\u003cconsole\u003e:7)\n.$print(\u003cconsole\u003e:6)\n$print(\u003cconsole\u003e)\nsun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\nsun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)\nsun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\njava.lang.reflect.Method.invoke(Method.java:498)\nscala.tools.nsc.interpreter.IMain$ReadEvalPrint.call(IMain.scala:786)\nscala.tools.nsc.interpreter.IMain$Request.loadAndRun(IMain.scala:1047)\nscala.tools.nsc.interpreter.IMain$WrappedRequest$$anonfun$loadAndRunReq$1.apply(IMain.scala:638)\nscala.tools.nsc.interpreter.IMain$WrappedRequest$$anonfun$loadAndRunReq$1.apply(IMain.scala:637)\nscala.reflect.internal.util.ScalaClassLoader$class.asContext(ScalaClassLoader.scala:31)\nscala.reflect.internal.util.AbstractFileClassLoader.asContext(AbstractFileClassLoader.scala:19)\nscala.tools.nsc.interpreter.IMain$WrappedRequest.loadAndRunReq(IMain.scala:637)\n  at org.apache.spark.streaming.StreamingContext$.org$apache$spark$streaming$StreamingContext$$assertNoOtherContextIsActive(StreamingContext.scala:736)\n  at org.apache.spark.streaming.StreamingContext.start(StreamingContext.scala:571)\n  ... 40 elided\n"
+      },
+      "dateCreated": "Jan 9, 2017 1:54:03 PM",
+      "status": "READY",
+      "errorMessage": "",
+      "progressUpdateIntervalMs": 500
+    },
+    {
+      "title": "",
+      "text": "%sql select * from tweets where text like \u0027%Trump%\u0027 limit 10",
+      "dateUpdated": "Jan 9, 2017 1:54:03 PM",
+      "config": {
+        "colWidth": 12.0,
+        "editorMode": "ace/mode/sql",
+        "editorHide": false,
+        "results": [
+          {
+            "graph": {
+              "mode": "table",
+              "height": 300.0,
+              "optionOpen": false,
+              "keys": [
+                {
+                  "name": "createdAt",
+                  "index": 0.0,
+                  "aggr": "sum"
+                }
+              ],
+              "values": [
+                {
+                  "name": "text",
+                  "index": 1.0,
+                  "aggr": "sum"
+                }
+              ],
+              "groups": [],
+              "scatter": {
+                "xAxis": {
+                  "name": "createdAt",
+                  "index": 0.0,
+                  "aggr": "sum"
+                },
+                "yAxis": {
+                  "name": "text",
+                  "index": 1.0,
+                  "aggr": "sum"
+                }
+              }
+            }
+          }
+        ],
+        "enabled": true,
+        "graph": {
+          "mode": "table",
+          "height": 300.0,
+          "optionOpen": false,
+          "keys": [
+            {
+              "name": "createdAt",
+              "index": 0.0,
+              "aggr": "sum"
+            }
+          ],
+          "values": [
+            {
+              "name": "text",
+              "index": 1.0,
+              "aggr": "sum"
+            }
+          ],
+          "groups": [],
+          "scatter": {
+            "xAxis": {
+              "name": "createdAt",
+              "index": 0.0,
+              "aggr": "sum"
+            },
+            "yAxis": {
+              "name": "text",
+              "index": 1.0,
+              "aggr": "sum"
+            }
+          }
+        }
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "jobName": "paragraph_1483991643962_-796369503",
+      "id": "20170105-140136_909917063",
+      "result": {
+        "code": "SUCCESS",
+        "type": "TABLE",
+        "msg": "createdAt\ttext\tlang\n1483938500\tRT USER: In an emotional speech at the Golden Globes, Meryl Streep got political and criticized President-elect Donald Trump… \ten\n"
+      },
+      "dateCreated": "Jan 9, 2017 1:54:03 PM",
+      "status": "READY",
+      "errorMessage": "",
+      "progressUpdateIntervalMs": 500
+    },
+    {
+      "text": "import edu.stanford.nlp.ling.CoreAnnotations\nimport edu.stanford.nlp.neural.rnn.RNNCoreAnnotations\nimport edu.stanford.nlp.pipeline.StanfordCoreNLP\nimport edu.stanford.nlp.sentiment.SentimentCoreAnnotations\n\nimport scala.collection.JavaConverters._\n\nobject Sentiment extends Enumeration {\n  type Sentiment \u003d Value\n  val VeryNegative, Negative, Neutral, Positive, VeryPositive \u003d Value\n}\n\nobject Functions {\n  @transient private var sentimentPipeline: StanfordCoreNLP \u003d _\n\n  private def getOrCreateSentimentPipeline(): StanfordCoreNLP \u003d {\n    if (sentimentPipeline \u003d\u003d null) {\n      val props \u003d new Properties()\n      props.setProperty(\"annotators\", \"tokenize, ssplit, parse, sentiment\")\n      sentimentPipeline \u003d new StanfordCoreNLP(props)\n    }\n    sentimentPipeline\n  }\n  \n  private def calcSentiment(text: String): Int \u003d {\n    val pipeline \u003d getOrCreateSentimentPipeline()\n    val annotation \u003d sentimentPipeline.process(text)\n    val tree \u003d annotation.get(classOf[CoreAnnotations.SentencesAnnotation])\n      .asScala\n      .head\n      .get(classOf[SentimentCoreAnnotations.SentimentAnnotatedTree])\n    RNNCoreAnnotations.getPredictedClass(tree) \n  }  \n  \n  def sentiment(text: String): String \u003d  \n    calcSentiment(text) match {\n        case 0 \u003d\u003e \"Very Negative\"\n        case 1 \u003d\u003e \"Negative\" \n        case 2 \u003d\u003e \"Neutral\" \n        case 3 \u003d\u003e \"Positive\" \n        case 4 \u003d\u003e \"Very Positive\"\n    }\n}\n  \nsqlc.udf.register(\"sentiment\", Functions.sentiment _)",
+      "dateUpdated": "Jan 9, 2017 1:54:03 PM",
+      "config": {
+        "colWidth": 12.0,
+        "editorMode": "ace/mode/scala",
+        "graph": {
+          "mode": "table",
+          "height": 300.0,
+          "optionOpen": false,
+          "keys": [],
+          "values": [],
+          "groups": [],
+          "scatter": {}
+        },
+        "enabled": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "jobName": "paragraph_1483991643962_-796369503",
+      "id": "20170109-000025_673142494",
+      "result": {
+        "code": "SUCCESS",
+        "type": "TEXT",
+        "msg": "\nimport edu.stanford.nlp.ling.CoreAnnotations\n\nimport edu.stanford.nlp.neural.rnn.RNNCoreAnnotations\n\nimport edu.stanford.nlp.pipeline.StanfordCoreNLP\n\nimport edu.stanford.nlp.sentiment.SentimentCoreAnnotations\n\n\n\nimport scala.collection.JavaConverters._\ndefined object Sentiment\ndefined object Functions\n\nres78: org.apache.spark.sql.expressions.UserDefinedFunction \u003d UserDefinedFunction(\u003cfunction1\u003e,StringType,Some(List(StringType)))\n"
+      },
+      "dateCreated": "Jan 9, 2017 1:54:03 PM",
+      "status": "READY",
+      "errorMessage": "",
+      "progressUpdateIntervalMs": 500
+    },
+    {
+      "title": "",
+      "text": "%sql select sentiment(text) as Sentiment, count(1) as Count from tweets where text like \u0027%Trump%\u0027 group by sentiment(text)",
+      "dateUpdated": "Jan 9, 2017 1:54:03 PM",
+      "config": {
+        "colWidth": 12.0,
+        "editorMode": "ace/mode/sql",
+        "editorHide": false,
+        "results": [
+          {
+            "graph": {
+              "mode": "table",
+              "height": 300.0,
+              "optionOpen": false,
+              "keys": [],
+              "values": [],
+              "groups": [],
+              "scatter": {}
+            }
+          }
+        ],
+        "enabled": true,
+        "graph": {
+          "mode": "table",
+          "height": 300.0,
+          "optionOpen": false,
+          "keys": [
+            {
+              "name": "Sentiment",
+              "index": 0.0,
+              "aggr": "sum"
+            }
+          ],
+          "values": [
+            {
+              "name": "Count",
+              "index": 1.0,
+              "aggr": "sum"
+            }
+          ],
+          "groups": [],
+          "scatter": {
+            "xAxis": {
+              "name": "Sentiment",
+              "index": 0.0,
+              "aggr": "sum"
+            },
+            "yAxis": {
+              "name": "Count",
+              "index": 1.0,
+              "aggr": "sum"
+            }
+          }
+        }
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "jobName": "paragraph_1483991643962_-796369503",
+      "id": "20170105-143717_1545672534",
+      "result": {
+        "code": "SUCCESS",
+        "type": "TABLE",
+        "msg": "Sentiment\tCount\nPositive\t1\nNeutral\t1\nNegative\t10\n"
+      },
+      "dateCreated": "Jan 9, 2017 1:54:03 PM",
+      "status": "READY",
+      "errorMessage": "",
+      "progressUpdateIntervalMs": 500
+    },
+    {
+      "text": "",
+      "dateUpdated": "Jan 9, 2017 1:54:03 PM",
+      "config": {
+        "colWidth": 12.0,
+        "graph": {
+          "mode": "table",
+          "height": 300.0,
+          "optionOpen": false,
+          "keys": [],
+          "values": [],
+          "groups": [],
+          "scatter": {}
+        },
+        "enabled": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "jobName": "paragraph_1483991643962_-796369503",
+      "id": "20170108-231425_122218767",
+      "dateCreated": "Jan 9, 2017 1:54:03 PM",
+      "status": "READY",
+      "errorMessage": "",
+      "progressUpdateIntervalMs": 500
+    }
+  ],
+  "name": "Twitter",
+  "id": "2C6XWDSQ1",
+  "angularObjects": {
+    "2C521F2BU:shared_process": [],
+    "2C5H34A19:shared_process": [],
+    "2C5FZQH8S:shared_process": [],
+    "2C5WSAUMH:shared_process": [],
+    "2C66YUFJE:shared_process": [],
+    "2C7K2Z8HZ:shared_process": [],
+    "2C8216NH7:shared_process": [],
+    "2C5P1CTKP:shared_process": [],
+    "2C8Q4R9BY:shared_process": [],
+    "2C8DHFDTR:shared_process": [],
+    "2C7B878T2:shared_process": [],
+    "2C6DVGVUB:shared_process": [],
+    "2C5MGYU5B:shared_process": [],
+    "2C6YVD6WH:shared_process": [],
+    "2C6K8FFCK:shared_process": [],
+    "2C7HKPZ12:shared_process": [],
+    "2C4ZN5A54:shared_process": [],
+    "2C7GC5MEH:shared_process": []
+  },
+  "config": {},
+  "info": {}
+}
