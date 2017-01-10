@@ -1,6 +1,6 @@
 # zeppelin-notebooks
 
-This example Zeppelin notebook provides a visualization of tweets on Trump from a Twitter stream. 
+This example Zeppelin notebook provides a visualization of the author sentiment of tweets about Trump using a Twitter stream. 
 
 1. Install Apache Zeppelin.
 Grab the `bin-all` download available [here](The https://zeppelin.apache.org/download.html) and expand it into a local directory. 
@@ -9,7 +9,7 @@ Grab the `bin-all` download available [here](The https://zeppelin.apache.org/dow
 
 3. Assuming you have java installed and are on Linux or a Mac, you can start it by running `bin/zeppelin-daemon.sh start`.
 
-4. Open your browser to http://localhost:8080/#/notebook/2C6XWDSQ1 and run each paragraph. Note, you'll need to enter your Twitter API credentials in the provided form in the 4th paragraph.
+4. Open your browser to `http://localhost:8080/#/notebook/2C6XWDSQ1` and run each paragraph. Note, you'll need to enter your Twitter API credentials in the provided form in the 4th paragraph.
 
 *Please note*: When running `sql` paragraphs, you may encounter the following error:
 ```
